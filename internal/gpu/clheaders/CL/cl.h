@@ -55,6 +55,7 @@ typedef cl_uint              cl_kernel_info;
 /* --- Error codes --------------------------------------------------------- */
 
 #define CL_SUCCESS                       0
+#define CL_DEVICE_NOT_FOUND              -1
 
 /* --- cl_bool ------------------------------------------------------------- */
 
@@ -65,10 +66,16 @@ typedef cl_uint              cl_kernel_info;
 
 #define CL_DEVICE_TYPE_GPU               (1 << 2)
 
+/* --- cl_platform_info ---------------------------------------------------- */
+
+#define CL_PLATFORM_VERSION              0x0901
+#define CL_PLATFORM_NAME                 0x0902
+
 /* --- cl_device_info ------------------------------------------------------ */
 
 #define CL_DEVICE_NAME                   0x102B
 #define CL_DEVICE_VENDOR                 0x102C
+#define CL_DEVICE_VERSION                0x102F
 
 /* --- cl_mem_flags -------------------------------------------------------- */
 
@@ -86,6 +93,13 @@ extern cl_int
 clGetPlatformIDs(cl_uint          num_entries,
                  cl_platform_id*  platforms,
                  cl_uint*         num_platforms);
+
+extern cl_int
+clGetPlatformInfo(cl_platform_id   platform,
+                  cl_platform_info param_name,
+                  size_t           param_value_size,
+                  void*            param_value,
+                  size_t*          param_value_size_ret);
 
 /* --- Device APIs --------------------------------------------------------- */
 

@@ -70,6 +70,19 @@ Each additional character in the prefix increases the search space by 32x. GPU a
 
 With GPU acceleration (OpenCL/Metal), I2P searches run ~100M+ keys/sec, reducing a 5-character search to seconds.
 
+### GPU requirements
+
+The GPU switch only appears when a compute device is detected at startup.
+
+- **macOS** — Metal, works out of the box on Apple Silicon.
+- **Windows** — OpenCL, provided by the NVIDIA/AMD/Intel graphics driver. No extra setup needed.
+- **Linux** — OpenCL, which requires a vendor ICD (driver plugin) that most distros do **not** install by default:
+  - **AMD**: `sudo apt install mesa-opencl-icd` (Debian/Ubuntu), or the ROCm OpenCL runtime
+  - **NVIDIA**: the proprietary driver's OpenCL package (`nvidia-opencl-icd` on Debian)
+  - **Intel**: `intel-opencl-icd`
+
+  Verify detection with `clinfo` (`sudo apt install clinfo`) — if `clinfo` shows no GPU, the app won't either. Launching the app from a terminal prints `[gpu]` diagnostic lines explaining what was (or wasn't) detected.
+
 ## Build from Source
 
 **Requirements:** Go 1.24+, CGO enabled for GPU support

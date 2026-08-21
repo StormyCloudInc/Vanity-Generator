@@ -299,8 +299,15 @@ static void ensureInit(void) {
     g_initialized = 1;
 
     cl_uint numPlatforms = 0;
-    clGetPlatformIDs(0, NULL, &numPlatforms);
-    if (numPlatforms == 0) return;
+    cl_int err = clGetPlatformIDs(0, NULL, &numPlatforms);
+    if (err != CL_SUCCESS || numPlatforms == 0) {
+        fprintf(stderr, "[gpu] no OpenCL platforms found (err=%d): no OpenCL runtime/driver (ICD) is installed\n", err);
+#ifdef __linux__
+        fprintf(stderr, "[gpu] AMD on Linux: install an OpenCL ICD, e.g. 'sudo apt install mesa-opencl-icd' (Debian/Ubuntu) or ROCm, then verify with 'clinfo'\n");
+        fprintf(stderr, "[gpu] NVIDIA on Linux: the proprietary driver provides OpenCL (package 'nvidia-opencl-icd' on Debian)\n");
+#endif
+        return;
+    }
 
     cl_platform_id* platforms = (cl_platform_id*)malloc(sizeof(cl_platform_id) * numPlatforms);
     clGetPlatformIDs(numPlatforms, platforms, NULL);
@@ -308,11 +315,22 @@ static void ensureInit(void) {
     // Count all GPU devices across platforms
     int total = 0;
     for (cl_uint p = 0; p < numPlatforms; p++) {
+        char pname[256] = "?", pver[256] = "?";
+        clGetPlatformInfo(platforms[p], CL_PLATFORM_NAME, sizeof(pname), pname, NULL);
+        clGetPlatformInfo(platforms[p], CL_PLATFORM_VERSION, sizeof(pver), pver, NULL);
         cl_uint nd = 0;
-        clGetDeviceIDs(platforms[p], CL_DEVICE_TYPE_GPU, 0, NULL, &nd);
+        err = clGetDeviceIDs(platforms[p], CL_DEVICE_TYPE_GPU, 0, NULL, &nd);
+        if (err != CL_SUCCESS && err != CL_DEVICE_NOT_FOUND)
+            fprintf(stderr, "[gpu] platform %u \"%s\" (%s): clGetDeviceIDs error %d\n", p, pname, pver, err);
+        else
+            fprintf(stderr, "[gpu] platform %u \"%s\" (%s): %u GPU device(s)\n", p, pname, pver, nd);
         total += nd;
     }
-    if (total == 0) { free(platforms); return; }
+    if (total == 0) {
+        fprintf(stderr, "[gpu] OpenCL is installed but no platform exposes a GPU device; GPU acceleration disabled\n");
+        free(platforms);
+        return;
+    }
 
     g_devices = (cl_device_id*)malloc(sizeof(cl_device_id) * total);
     int idx = 0;
@@ -325,6 +343,13 @@ static void ensureInit(void) {
         }
     }
     g_deviceCount = idx;
+    for (int i = 0; i < g_deviceCount; i++) {
+        char dname[256] = "?", dvendor[256] = "?", dver[256] = "?";
+        clGetDeviceInfo(g_devices[i], CL_DEVICE_NAME, sizeof(dname), dname, NULL);
+        clGetDeviceInfo(g_devices[i], CL_DEVICE_VENDOR, sizeof(dvendor), dvendor, NULL);
+        clGetDeviceInfo(g_devices[i], CL_DEVICE_VERSION, sizeof(dver), dver, NULL);
+        fprintf(stderr, "[gpu] device %d: %s (%s, %s)\n", i, dname, dvendor, dver);
+    }
     free(platforms);
 }
 

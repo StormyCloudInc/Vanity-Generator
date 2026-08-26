@@ -2,9 +2,44 @@ name: Test GPU Build
 
 on:
   push:
-    branches: ['gpu-support']
+    branches: ['gpu-support', 'amd-gpu-support']
 
 jobs:
+  build-linux-gpu:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+
+      - name: Install Linux dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc pkg-config libwayland-dev libx11-dev libx11-xcb-dev libxkbcommon-x11-dev libgles2-mesa-dev libegl1-mesa-dev libffi-dev libxcursor-dev libvulkan-dev ocl-icd-opencl-dev
+
+      - name: Build Linux amd64 with GPU support
+        env:
+          GOOS: linux
+          GOARCH: amd64
+          CGO_ENABLED: 1
+        run: |
+          go version
+          echo "Building with OpenCL GPU support..."
+          LDFLAGS="-s -w -X github.com/go-i2p/i2p-vanitygen/internal/version.Version=gpu-test"
+          go build -ldflags "${LDFLAGS}" -o "vanitygenerator" .
+          echo "Build successful!"
+          ls -la vanitygenerator
+          file vanitygenerator
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: vanitygenerator-linux-gpu-test
+          path: vanitygenerator
+
   build-macos-gpu:
     runs-on: [self-hosted, macOS]
 

@@ -68,33 +68,36 @@ jobs:
           path: vanitygenerator
 
   build-windows-gpu:
-    runs-on: [self-hosted, Windows, X64]
+    runs-on: windows-latest
 
     steps:
       - uses: actions/checkout@v4
 
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+
       - name: Generate OpenCL import library
         run: |
-          $gccDir = Split-Path (Get-Command gcc).Source
-          $libDir = Join-Path (Split-Path $gccDir) "lib"
-          gendef C:\Windows\System32\OpenCL.dll
-          dlltool -d OpenCL.def -l libOpenCL.a
-          Copy-Item libOpenCL.a $libDir
-          Write-Host "Installed libOpenCL.a to $libDir"
+          gcc --version
+          dlltool -d .github\OpenCL.def -l libOpenCL.a -D OpenCL.dll
+          Write-Host "Generated libOpenCL.a from .github\OpenCL.def"
         shell: powershell
 
       - name: Build Windows amd64 with GPU support
+        env:
+          GOOS: windows
+          GOARCH: amd64
+          CGO_ENABLED: 1
+          CC: gcc
         run: |
           go version
-          echo Building with OpenCL GPU support...
-          set GOOS=windows
-          set GOARCH=amd64
-          set CGO_ENABLED=1
-          set CC=gcc
+          Write-Host "Building with OpenCL GPU support..."
+          $env:CGO_LDFLAGS = "-L$PWD"
           go build -ldflags "-H=windowsgui -s -w -X github.com/go-i2p/i2p-vanitygen/internal/version.Version=gpu-test" -o "vanitygenerator.exe" .
-          echo Build successful!
-          dir vanitygenerator.exe
-        shell: cmd
+          Write-Host "Build successful!"
+          Get-Item vanitygenerator.exe
+        shell: powershell
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4

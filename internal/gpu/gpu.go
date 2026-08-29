@@ -6,7 +6,14 @@ type Device struct {
 	Vendor        string
 	MaxWorkGroups int
 	Backend       string // "Metal" or "OpenCL"
+	Index         int    // backend device index, pass as WorkerConfig.DeviceIndex
 }
+
+// ProbeEnv is the environment variable that switches the binary into GPU
+// probe mode: the process compiles and runs a tiny kernel on the given device
+// index, then exits. Run as a subprocess so that a driver whose compiler
+// crashes (e.g. Mesa r600 aborts on global atomics) cannot take down the app.
+const ProbeEnv = "VANITYGEN_GPU_PROBE"
 
 // WorkerConfig configures a GPU vanity search worker.
 type WorkerConfig struct {

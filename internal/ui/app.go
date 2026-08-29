@@ -1308,7 +1308,13 @@ func (s *state) start(w *app.Window) {
 	s.saved = false
 	s.mu.Unlock()
 
-	gen := generator.New(s.scheme, s.prefixes, s.cores, s.useGPU, s.gpuDevice)
+	// s.gpuDevice is a position in the filtered device list; the generator
+	// needs the backend's raw device index.
+	gpuDeviceIndex := s.gpuDevice
+	if s.gpuDevice >= 0 && s.gpuDevice < len(s.gpuDevices) {
+		gpuDeviceIndex = s.gpuDevices[s.gpuDevice].Index
+	}
+	gen := generator.New(s.scheme, s.prefixes, s.cores, s.useGPU, gpuDeviceIndex)
 	ctx, cancel := context.WithCancel(context.Background())
 
 	s.mu.Lock()

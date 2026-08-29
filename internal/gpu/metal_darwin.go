@@ -34,11 +34,15 @@ func ListDevices() ([]Device, error) {
 		devices[i] = Device{
 			Name:    C.GoString(nameSlice[i]),
 			Backend: "Metal",
+			Index:   i,
 		}
 		C.free(unsafe.Pointer(nameSlice[i]))
 	}
 	return devices, nil
 }
+
+// ProbeMain is a no-op on Metal; device probing is only needed for OpenCL.
+func ProbeMain(string) int { return 0 }
 
 // NewWorker creates a GPU worker using Metal compute shaders.
 func NewWorker(cfg WorkerConfig) (*Worker, error) {

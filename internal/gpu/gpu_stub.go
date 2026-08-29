@@ -10,6 +10,9 @@ func Available() bool { return false }
 // ListDevices returns nil when GPU support is not compiled in.
 func ListDevices() ([]Device, error) { return nil, nil }
 
+// ProbeMain is a no-op when GPU support is not compiled in.
+func ProbeMain(string) int { return 0 }
+
 // NewWorker returns an error when GPU support is not compiled in.
 func NewWorker(cfg WorkerConfig) (*Worker, error) {
 	return nil, fmt.Errorf("GPU support not available (built without CGo)")

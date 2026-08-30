@@ -63,12 +63,9 @@ jobs:
 
       - name: Generate OpenCL import library
         run: |
-          $gccDir = Split-Path (Get-Command gcc).Source
-          $libDir = Join-Path (Split-Path $gccDir) "lib"
-          gendef C:\Windows\System32\OpenCL.dll
-          dlltool -d OpenCL.def -l libOpenCL.a
-          Copy-Item libOpenCL.a $libDir
-          Write-Host "Installed libOpenCL.a to $libDir"
+          gcc --version
+          dlltool -d .github\OpenCL.def -l libOpenCL.a -D OpenCL.dll
+          Write-Host "Generated libOpenCL.a from .github\OpenCL.def"
         shell: powershell
 
       - name: Generate Windows resources
@@ -83,6 +80,7 @@ jobs:
           set GOARCH=amd64
           set CGO_ENABLED=1
           set CC=gcc
+          set CGO_LDFLAGS=-L%CD%
           go build -trimpath -ldflags "-H=windowsgui -s -w -X github.com/go-i2p/i2p-vanitygen/internal/version.Version=${{ github.ref_name }}" -o "vanitygenerator_windows_signed.exe" .
         shell: cmd
 

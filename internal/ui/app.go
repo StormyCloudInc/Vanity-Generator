@@ -168,6 +168,7 @@ func Run(w *app.Window) error {
 	}()
 
 	var ops op.Ops
+	var winW, winH int // last window size in dp, persisted on close
 	for {
 		switch e := w.Event().(type) {
 		case app.DestroyEvent:
@@ -176,8 +177,15 @@ func Run(w *app.Window) error {
 			if s.hasUnsavedResults() {
 				s.save()
 			}
+			if winW >= 300 && winH >= 300 {
+				cfg.WindowWidth = winW
+				cfg.WindowHeight = winH
+				config.Save(cfg)
+			}
 			return e.Err
 		case app.FrameEvent:
+			winW = int(e.Metric.PxToDp(e.Size.X) + 0.5)
+			winH = int(e.Metric.PxToDp(e.Size.Y) + 0.5)
 			gtx := app.NewContext(&ops, e)
 			paint.Fill(gtx.Ops, colorBg)
 
@@ -196,9 +204,10 @@ func Run(w *app.Window) error {
 				s.updateAvailable = false
 				s.mu.Unlock()
 				if tag != "" {
-					go config.Save(&config.Config{
-						SkippedVersion: tag,
-					})
+					// Mutate the loaded config so other preferences survive
+					cfg.SkippedVersion = tag
+					cfgCopy := *cfg
+					go config.Save(&cfgCopy)
 				}
 			}
 
@@ -430,8 +439,9 @@ func layoutApp(gtx layout.Context, th *material.Theme, s *state, prefixEditor *w
 			const numSections = 7
 
 			list := material.List(th, scrollList)
-			list.Indicator.MinorWidth = unit.Dp(4)
-			list.Indicator.Color = colorMuted
+			list.Indicator.MinorWidth = unit.Dp(8)
+			list.Indicator.Color = colorLabel
+			list.Indicator.HoverColor = colorAccent
 			return list.Layout(gtx, numSections, func(gtx layout.Context, index int) layout.Dimensions {
 				switch index {
 				case 0: // Header

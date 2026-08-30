@@ -15,8 +15,10 @@ const (
 // Config holds persistent user preferences.
 type Config struct {
 	SkippedVersion string `json:"skipped_version,omitempty"`
-	GPUEnabled       *bool  `json:"gpu_enabled,omitempty"`
-	Network          string `json:"network,omitempty"`
+	GPUEnabled     *bool  `json:"gpu_enabled,omitempty"`
+	Network        string `json:"network,omitempty"`
+	WindowWidth    int    `json:"window_width,omitempty"`  // in dp
+	WindowHeight   int    `json:"window_height,omitempty"` // in dp
 }
 
 // Load reads the config from disk. If the file does not exist,

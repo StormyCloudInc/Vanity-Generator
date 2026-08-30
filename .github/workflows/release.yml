@@ -45,6 +45,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Add MinGW to PATH
+        run: |
+          $dirs = "C:\ProgramData\mingw64\mingw64\bin","C:\mingw64\bin","C:\msys64\mingw64\bin","C:\TDM-GCC-64\bin","C:\Strawberry\c\bin"
+          $gccDir = $dirs | Where-Object { Test-Path "$_\gcc.exe" } | Select-Object -First 1
+          if (-not $gccDir) { Write-Error "gcc.exe not found in any known MinGW location"; exit 1 }
+          Write-Host "Using MinGW at $gccDir"
+          Add-Content $env:GITHUB_PATH $gccDir
+        shell: powershell
+
       - name: Set version in Windows resources
         run: |
           $tag = "${{ github.ref_name }}" -replace '^v',''

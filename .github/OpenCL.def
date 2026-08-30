@@ -1,0 +1,26 @@
+; Exports of OpenCL.dll used by internal/gpu/gpu_opencl.go.
+; Used with dlltool to generate a MinGW import library on GitHub-hosted
+; Windows runners, where OpenCL.dll may not exist at build time.
+LIBRARY OpenCL.dll
+EXPORTS
+clGetPlatformIDs
+clGetPlatformInfo
+clGetDeviceIDs
+clGetDeviceInfo
+clCreateContext
+clCreateCommandQueue
+clCreateProgramWithSource
+clBuildProgram
+clGetProgramBuildInfo
+clCreateKernel
+clCreateBuffer
+clSetKernelArg
+clEnqueueWriteBuffer
+clEnqueueReadBuffer
+clEnqueueNDRangeKernel
+clFinish
+clReleaseMemObject
+clReleaseKernel
+clReleaseProgram
+clReleaseCommandQueue
+clReleaseContext

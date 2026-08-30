@@ -379,6 +379,67 @@ char* oclDeviceVendor(int index) {
     return strdup(vendor);
 }
 
+// Compiles and runs a tiny kernel exercising the features the real kernels
+// need (global int32 atomic_cmpxchg, 64-bit integers). Returns 1 on success.
+// Run from a disposable subprocess: broken driver compilers (e.g. Mesa r600)
+// abort() instead of returning a build error, killing the calling process.
+int oclProbeDevice(int index) {
+    ensureInit();
+    if (index < 0 || index >= g_deviceCount) return 0;
+
+    cl_device_id dev = g_devices[index];
+    cl_int err;
+    const char* src =
+        "__kernel void probe(__global int* flag, __global ulong* out) {\n"
+        "    ulong gid = get_global_id(0);\n"
+        "    if (atomic_cmpxchg(flag, 0, 1) == 0) { out[0] = gid + 1; }\n"
+        "}\n";
+
+    cl_context ctx = clCreateContext(NULL, 1, &dev, NULL, NULL, &err);
+    if (err != CL_SUCCESS) return 0;
+    cl_command_queue q = clCreateCommandQueue(ctx, dev, 0, &err);
+    if (err != CL_SUCCESS) { clReleaseContext(ctx); return 0; }
+
+    int ok = 0;
+    size_t len = strlen(src);
+    cl_program prog = clCreateProgramWithSource(ctx, 1, &src, &len, &err);
+    if (err == CL_SUCCESS) {
+        err = clBuildProgram(prog, 1, &dev, NULL, NULL, NULL);
+        if (err != CL_SUCCESS) {
+            char log[2048];
+            clGetProgramBuildInfo(prog, dev, CL_PROGRAM_BUILD_LOG, sizeof(log), log, NULL);
+            fprintf(stderr, "[gpu] probe build failed on device %d: %s\n", index, log);
+        } else {
+            cl_kernel k = clCreateKernel(prog, "probe", &err);
+            if (err == CL_SUCCESS) {
+                int zero = 0;
+                cl_ulong outv = 0;
+                cl_mem flag = clCreateBuffer(ctx, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
+                                             sizeof(int), &zero, &err);
+                cl_mem out = clCreateBuffer(ctx, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,
+                                            sizeof(cl_ulong), &outv, &err);
+                clSetKernelArg(k, 0, sizeof(cl_mem), &flag);
+                clSetKernelArg(k, 1, sizeof(cl_mem), &out);
+                size_t gs = 64;
+                if (clEnqueueNDRangeKernel(q, k, 1, NULL, &gs, NULL, 0, NULL, NULL) == CL_SUCCESS &&
+                    clFinish(q) == CL_SUCCESS) {
+                    cl_ulong res = 0;
+                    if (clEnqueueReadBuffer(q, out, CL_TRUE, 0, sizeof(cl_ulong), &res,
+                                            0, NULL, NULL) == CL_SUCCESS && res != 0)
+                        ok = 1;
+                }
+                clReleaseMemObject(out);
+                clReleaseMemObject(flag);
+                clReleaseKernel(k);
+            }
+        }
+        clReleaseProgram(prog);
+    }
+    clReleaseCommandQueue(q);
+    clReleaseContext(ctx);
+    return ok;
+}
+
 void* oclNewWorker(int deviceIndex, const unsigned char* destTemplate,
                    const char* prefix, int prefixLen, unsigned long batchSize) {
     ensureInit();
@@ -642,7 +703,12 @@ void oclFreeTorV3Worker(void* handle) {
 */
 import "C"
 import (
+	"context"
 	"fmt"
+	"os"
+	"os/exec"
+	"strconv"
+	"time"
 	"unsafe"
 )
 
@@ -651,26 +717,62 @@ func Available() bool {
 	return C.oclAvailable() != 0
 }
 
-// ListDevices enumerates OpenCL GPU devices.
+// ListDevices enumerates OpenCL GPU devices and filters out devices whose
+// driver cannot compile/run our kernels. Each candidate is probed in a
+// subprocess because broken driver compilers (e.g. Mesa r600 on old AMD APUs)
+// abort() instead of returning an error, which would kill the app.
 func ListDevices() ([]Device, error) {
 	count := int(C.oclDeviceCount())
 	if count == 0 {
 		return nil, nil
 	}
 
-	devices := make([]Device, count)
+	exe, exeErr := os.Executable()
+
+	var devices []Device
 	for i := 0; i < count; i++ {
 		cName := C.oclDeviceName(C.int(i))
 		cVendor := C.oclDeviceVendor(C.int(i))
-		devices[i] = Device{
+		d := Device{
 			Name:    C.GoString(cName),
 			Vendor:  C.GoString(cVendor),
 			Backend: "OpenCL",
+			Index:   i,
 		}
 		C.free(unsafe.Pointer(cName))
 		C.free(unsafe.Pointer(cVendor))
+
+		if exeErr == nil && !probeDeviceSubprocess(exe, i) {
+			fmt.Fprintf(os.Stderr, "[gpu] device %d (%s) failed compute probe; excluding\n", i, d.Name)
+			continue
+		}
+		devices = append(devices, d)
 	}
 	return devices, nil
+}
+
+// probeDeviceSubprocess re-executes this binary in probe mode against one
+// device. Any failure — nonzero exit, driver abort(), or hang past the
+// timeout — marks the device unusable.
+func probeDeviceSubprocess(exe string, index int) bool {
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	cmd := exec.CommandContext(ctx, exe)
+	cmd.Env = append(os.Environ(), ProbeEnv+"="+strconv.Itoa(index))
+	cmd.Stderr = os.Stderr
+	return cmd.Run() == nil
+}
+
+// ProbeMain is the subprocess entry point for probe mode (see ProbeEnv).
+func ProbeMain(arg string) int {
+	idx, err := strconv.Atoi(arg)
+	if err != nil {
+		return 2
+	}
+	if C.oclProbeDevice(C.int(idx)) != 0 {
+		return 0
+	}
+	return 1
 }
 
 // NewWorker creates a GPU worker using OpenCL compute.

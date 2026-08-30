@@ -91,7 +91,7 @@ jobs:
           set CGO_ENABLED=1
           set CC=gcc
           set CGO_LDFLAGS=-L%CD%
-          go build -trimpath -ldflags "-H=windowsgui -s -w -X github.com/go-i2p/i2p-vanitygen/internal/version.Version=${{ github.ref_name }}" -o "vanitygenerator_windows_signed.exe" .
+          go build -trimpath -buildvcs=false -ldflags "-H=windowsgui -s -w -X github.com/go-i2p/i2p-vanitygen/internal/version.Version=${{ github.ref_name }}" -o "vanitygenerator_windows_signed.exe" .
         shell: cmd
 
       - name: Sign Windows binary

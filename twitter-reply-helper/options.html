@@ -34,6 +34,11 @@
     <small>Describe how you write. Paste a few of your past tweets here for the best match. Mention what you do if you want replies to lean on it.</small>
   </label>
 
+  <label>Past replies (examples Claude copies your style from)
+    <textarea id="examples" rows="14" placeholder="POST: @someone: the post text&#10;REPLY: what you replied&#10;---&#10;POST: ...&#10;REPLY: ..."></textarea>
+    <small>Every draft you copy, and every reply you save from the popup, gets added here (the last 40 are kept). Delete any that don't sound like you. Paste in your best real replies to get started. This matters more than the voice guide.</small>
+  </label>
+
   <label class="row"><input id="includeImages" type="checkbox"> Send post images to Claude</label>
 
   <button id="save">Save</button> <span id="saved"></span>

@@ -37,14 +37,10 @@ function renderReplies(replies, skip) {
     const card = document.createElement("div");
     card.className = "reply";
 
-    const angle = document.createElement("div");
-    angle.className = "angle";
-    angle.textContent = r.angle;
-
     const text = document.createElement("div");
     text.className = "text";
     text.contentEditable = "true"; // tweak before copying
-    text.textContent = r.text;
+    text.textContent = typeof r === "string" ? r : r.text;
 
     const foot = document.createElement("div");
     foot.className = "foot";
@@ -61,14 +57,36 @@ function renderReplies(replies, skip) {
     copy.textContent = "Copy";
     copy.onclick = async () => {
       await navigator.clipboard.writeText(text.textContent);
+      saveExample(text.textContent);
       copy.textContent = "Copied ✓";
       setTimeout(() => (copy.textContent = "Copy"), 1200);
     };
     foot.append(count, copy);
-    card.append(angle, text, foot);
+    card.append(text, foot);
     box.append(card);
   });
 }
+
+function postSummary() {
+  if (!ctx?.focal) return "";
+  const p = ctx.focal;
+  let s = `${p.handle || p.name}: ${p.text}`;
+  if (p.quoted) s += ` [quoting: ${p.quoted}]`;
+  return s;
+}
+
+function saveExample(reply) {
+  return chrome.runtime.sendMessage({ type: "saveExample", post: postSummary(), reply });
+}
+
+$("saveOwn").onclick = async () => {
+  const reply = $("own").value.trim();
+  if (!reply || !ctx) return;
+  await saveExample(reply);
+  $("own").value = "";
+  $("saveOwn").textContent = "Saved ✓";
+  setTimeout(() => ($("saveOwn").textContent = "Save"), 1200);
+};
 
 async function readPage() {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });

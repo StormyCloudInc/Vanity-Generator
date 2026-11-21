@@ -1,0 +1,34 @@
+:root { --bg:#fff; --fg:#0f1419; --muted:#536471; --line:#eff3f4; --card:#f7f9f9; --accent:#1d9bf0; --err:#f4212e; }
+@media (prefers-color-scheme: dark) {
+  :root { --bg:#000; --fg:#e7e9ea; --muted:#71767b; --line:#2f3336; --card:#16181c; }
+}
+* { box-sizing: border-box; }
+body { margin:0; font:14px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background:var(--bg); color:var(--fg); }
+button { background:var(--accent); color:#fff; border:0; border-radius:999px; padding:7px 14px; font-weight:600; cursor:pointer; }
+button:disabled { opacity:.5; cursor:default; }
+input, select, textarea { width:100%; background:var(--card); color:var(--fg); border:1px solid var(--line); border-radius:8px; padding:7px 9px; font:inherit; }
+.hidden { display:none; }
+
+.popup { width:380px; padding:12px; }
+.popup header { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+.popup header a { color:var(--muted); text-decoration:none; font-size:16px; }
+.post { border-left:3px solid var(--accent); padding:4px 10px; margin-bottom:10px; max-height:90px; overflow:hidden; }
+.post .who { color:var(--muted); font-size:12px; }
+.post .text { white-space:pre-wrap; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
+.controls { display:grid; gap:6px; }
+.status { color:var(--muted); margin:10px 0 4px; min-height:1em; }
+.status.error { color:var(--err); }
+.reply { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:10px; margin-top:8px; }
+.reply .angle { font-size:11px; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); margin-bottom:4px; }
+.reply .text { white-space:pre-wrap; outline:none; }
+.reply .text:focus { box-shadow:0 0 0 2px var(--accent); border-radius:4px; }
+.reply .foot { display:flex; justify-content:space-between; align-items:center; margin-top:8px; color:var(--muted); font-size:12px; }
+.reply .foot .over { color:var(--err); }
+.reply .foot button { padding:4px 12px; }
+
+.options { max-width:560px; margin:40px auto; padding:0 16px; }
+.options label { display:block; margin:18px 0; font-weight:600; }
+.options label input, .options label select, .options label textarea { margin-top:6px; font-weight:400; }
+.options label.row { display:flex; gap:8px; align-items:center; font-weight:400; }
+.options label.row input { width:auto; margin:0; }
+.options small { display:block; color:var(--muted); font-weight:400; margin-top:4px; }

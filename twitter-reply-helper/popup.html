@@ -1,0 +1,35 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body class="popup">
+  <header>
+    <strong>Reply Helper</strong>
+    <a href="#" id="settings" title="Settings">⚙︎</a>
+  </header>
+
+  <div id="post" class="post hidden"></div>
+
+  <div class="controls">
+    <select id="tone">
+      <option value="">Mixed angles</option>
+      <option value="funny and playful">Funny</option>
+      <option value="insightful, adds real value">Insightful</option>
+      <option value="supportive and warm">Supportive</option>
+      <option value="respectful but pushes back / disagrees">Push back</option>
+      <option value="curious, asks a good question">Curious</option>
+      <option value="very short, one punchy line">Short &amp; punchy</option>
+    </select>
+    <input id="notes" placeholder="Optional: steer it (e.g. mention my product)">
+    <button id="go">Draft replies</button>
+  </div>
+
+  <div id="status" class="status"></div>
+  <div id="replies"></div>
+
+  <script src="extract.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

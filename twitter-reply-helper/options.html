@@ -1,0 +1,43 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Reply Helper Settings</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body class="options">
+  <h1>Reply Helper Settings</h1>
+
+  <label>Anthropic API key
+    <input id="apiKey" type="password" placeholder="sk-ant-..." autocomplete="off">
+    <small>Get one at console.anthropic.com → API Keys. Stored in your Chrome profile only.</small>
+  </label>
+
+  <label>Model
+    <select id="model">
+      <option value="claude-opus-5-5">Claude Opus 5.5 (best)</option>
+      <option value="claude-sonnet-5-5">Claude Sonnet 5.5 (cheaper, fast)</option>
+      <option value="claude-haiku-5-5">Claude Haiku 5.5 (cheapest, fastest)</option>
+    </select>
+  </label>
+
+  <label>Effort
+    <select id="effort">
+      <option value="low">Low (fastest, fine for replies)</option>
+      <option value="medium">Medium</option>
+      <option value="high">High (slower, more considered)</option>
+    </select>
+  </label>
+
+  <label>Your voice / style
+    <textarea id="voice" rows="6"></textarea>
+    <small>Describe how you write. Paste a few of your past tweets here for the best match. Mention what you do if you want replies to lean on it.</small>
+  </label>
+
+  <label class="row"><input id="includeImages" type="checkbox"> Send post images to Claude</label>
+
+  <button id="save">Save</button> <span id="saved"></span>
+
+  <script src="options.js"></script>
+</body>
+</html>

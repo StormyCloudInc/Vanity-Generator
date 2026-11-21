@@ -1,0 +1,21 @@
+{
+  "manifest_version": 3,
+  "name": "Reply Helper",
+  "version": "1.0.0",
+  "description": "Reads the X/Twitter post you're viewing and drafts 3 replies with Claude.",
+  "permissions": ["activeTab", "scripting", "storage"],
+  "host_permissions": [
+    "https://x.com/*",
+    "https://twitter.com/*",
+    "https://api.anthropic.com/*"
+  ],
+  "background": { "service_worker": "background.js" },
+  "action": { "default_popup": "popup.html", "default_title": "Draft replies" },
+  "options_page": "options.html",
+  "commands": {
+    "_execute_action": {
+      "suggested_key": { "default": "Alt+R" },
+      "description": "Open Reply Helper"
+    }
+  }
+}

@@ -69,3 +69,39 @@ function extractTweetContext() {
   }
   return { url: location.href, focal, parents, replies };
 }
+
+// Run on x.com/<you>/with_replies. Scrolls the page and collects (parent post, your reply) pairs.
+async function collectOwnReplies(steps = 25) {
+  const me = (location.pathname.split("/")[1] || "").toLowerCase();
+  if (!me || !/\/with_replies/.test(location.pathname)) {
+    return { error: "Open your profile's Replies tab (x.com/<you>/with_replies) first." };
+  }
+  const pairs = new Map();
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  const read = (el) => {
+    const userText = el.querySelector('[data-testid="User-Name"]')?.innerText || "";
+    const handle = (userText.match(/@\w{1,15}/) || [""])[0];
+    const texts = [...el.querySelectorAll('[data-testid="tweetText"]')];
+    return {
+      handle,
+      text: (texts[0]?.innerText || "").trim(),
+      quoted: (texts[1]?.innerText || "").trim(),
+      social: el.innerText.includes("Reposted"),
+    };
+  };
+  for (let i = 0; i < steps; i++) {
+    const arts = [...document.querySelectorAll('article[data-testid="tweet"]')].map(read);
+    for (let j = 1; j < arts.length; j++) {
+      const r = arts[j], p = arts[j - 1];
+      if (r.handle.toLowerCase() !== "@" + me || !r.text || r.social) continue;
+      if (!p.handle || p.handle.toLowerCase() === "@" + me || !p.text) continue;
+      let post = `${p.handle}: ${p.text}`;
+      if (p.quoted) post += ` [quoting: ${p.quoted}]`;
+      pairs.set(post + "|" + r.text, { post, reply: r.text });
+    }
+    window.scrollBy(0, window.innerHeight * 0.9);
+    await sleep(1200);
+  }
+  window.scrollTo(0, 0);
+  return { pairs: [...pairs.values()] };
+}

@@ -134,8 +134,40 @@ async function generate() {
 $("go").onclick = generate;
 $("notes").addEventListener("keydown", (e) => e.key === "Enter" && generate());
 
+async function importReplies(tab) {
+  $("import").disabled = true;
+  $("import").textContent = "Scrolling and collecting… (about 30s)";
+  try {
+    const [{ result }] = await chrome.scripting.executeScript({ target: { tabId: tab.id }, func: collectOwnReplies });
+    if (result.error) throw new Error(result.error);
+    for (const pr of result.pairs) {
+      await chrome.runtime.sendMessage({ type: "saveExample", post: pr.post, reply: pr.reply });
+    }
+    $("import").textContent = `Imported ${result.pairs.length} replies ✓`;
+    const text = result.pairs.map((e) => `POST: ${e.post}\nREPLY: ${e.reply}`).join("\n---\n");
+    $("dump").value = text;
+    $("dump").classList.remove("hidden");
+    $("copyDump").classList.remove("hidden");
+    $("copyDump").onclick = async () => {
+      await navigator.clipboard.writeText(text);
+      $("copyDump").textContent = "Copied ✓";
+    };
+  } catch (e) {
+    $("import").textContent = "Import my replies";
+    $("import").disabled = false;
+    setStatus(e.message, true);
+  }
+}
+
 // On open: show the post, restore replies if we already drafted for this URL, else auto-generate.
 (async () => {
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  if (tab?.url && /^https:\/\/(x|twitter)\.com\/[^/]+\/with_replies/.test(tab.url)) {
+    $("importBox").classList.remove("hidden");
+    $("import").onclick = () => importReplies(tab);
+    $("go").disabled = true;
+    return;
+  }
   try {
     ctx = await readPage();
     renderPost(ctx.focal);

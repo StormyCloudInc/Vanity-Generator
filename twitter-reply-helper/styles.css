@@ -35,3 +35,6 @@ input, select, textarea { width:100%; background:var(--card); color:var(--fg); b
 .skip { background:#ffd40022; border:1px solid #ffd40066; border-radius:10px; padding:8px 10px; margin-top:8px; font-size:13px; }
 .own { display:flex; gap:6px; margin-top:12px; }
 .own button { flex:none; }
+.import { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:10px; margin-top:8px; display:grid; gap:8px; }
+.import p { margin:0; }
+.import textarea { font-size:12px; }

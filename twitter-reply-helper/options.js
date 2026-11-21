@@ -37,5 +37,18 @@ $("save").onclick = async () => {
   }
   await chrome.storage.local.set(out);
   $("saved").textContent = "Saved ✓";
+  loadLearned();
   setTimeout(() => ($("saved").textContent = ""), 1500);
+};
+
+const loadLearned = () =>
+  chrome.runtime.sendMessage({ type: "getLearned" }).then((r) => {
+    if (r?.text) $("learned").textContent = r.text;
+  });
+loadLearned();
+$("resetLearned").onclick = async () => {
+  if (!confirm("Reset style votes? Your saved replies stay.")) return;
+  await chrome.runtime.sendMessage({ type: "resetLearned" });
+  $("learned").textContent = "Nothing yet. Copy a few drafts and this fills in.";
+  loadLearned();
 };

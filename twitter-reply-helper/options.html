@@ -39,6 +39,13 @@
     <small>Every draft you copy, and every reply you save from the popup, gets added here (the last 40 are kept). Delete any that don't sound like you. Paste in your best real replies to get started. This matters more than the voice guide.</small>
   </label>
 
+  <div class="learned">
+    <strong>What it's learned</strong>
+    <pre id="learned">Nothing yet. Copy a few drafts and this fills in.</pre>
+    <small>Each time you copy a draft, that style gets a vote. Styles you skip count against it. Your length, punctuation and question habits come from the replies above.</small>
+    <button id="resetLearned" type="button">Reset style votes</button>
+  </div>
+
   <label class="row"><input id="includeImages" type="checkbox"> Send post images to Claude</label>
 
   <button id="save">Save</button> <span id="saved"></span>

@@ -55,9 +55,11 @@ function renderReplies(replies, skip) {
 
     const copy = document.createElement("button");
     copy.textContent = "Copy";
+    let voted = false;
     copy.onclick = async () => {
       await navigator.clipboard.writeText(text.textContent);
-      saveExample(text.textContent);
+      saveExample(text.textContent, voted ? null : r.move);
+      voted = true;
       copy.textContent = "Copied ✓";
       setTimeout(() => (copy.textContent = "Copy"), 1200);
     };
@@ -75,8 +77,8 @@ function postSummary() {
   return s;
 }
 
-function saveExample(reply) {
-  return chrome.runtime.sendMessage({ type: "saveExample", post: postSummary(), reply });
+function saveExample(reply, move = null) {
+  return chrome.runtime.sendMessage({ type: "saveExample", post: postSummary(), reply, move });
 }
 
 $("saveOwn").onclick = async () => {

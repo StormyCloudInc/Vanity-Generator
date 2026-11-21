@@ -38,3 +38,6 @@ input, select, textarea { width:100%; background:var(--card); color:var(--fg); b
 .import { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:10px; margin-top:8px; display:grid; gap:8px; }
 .import p { margin:0; }
 .import textarea { font-size:12px; }
+.learned { margin:18px 0; display:grid; gap:8px; }
+.learned pre { background:var(--card); border:1px solid var(--line); border-radius:8px; padding:10px; white-space:pre-wrap; font:12px/1.5 ui-monospace, monospace; margin:0; }
+.learned button { justify-self:start; }

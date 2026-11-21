@@ -19,6 +19,7 @@ function extractTweetContext() {
       .slice(0, 4);
     const hasVideo = !!el.querySelector('[data-testid="videoPlayer"], video');
     const card = el.querySelector('[data-testid="card.wrapper"]');
+    const tr = el.innerText.match(/Translated from ([A-Z][a-z]+)/);
     return {
       name,
       handle,
@@ -26,6 +27,7 @@ function extractTweetContext() {
       quoted: texts[1] ? clean(texts[1].innerText) : "",
       images,
       hasVideo,
+      translated: tr ? tr[1] : "",
       linkCard: card ? clean(card.innerText).slice(0, 300) : "",
       statusPath: statusLink || "",
     };

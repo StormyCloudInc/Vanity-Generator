@@ -24,9 +24,15 @@ function renderPost(p) {
   el.append(who, text);
 }
 
-function renderReplies(replies) {
+function renderReplies(replies, skip) {
   const box = $("replies");
   box.innerHTML = "";
+  if (skip) {
+    const warn = document.createElement("div");
+    warn.className = "skip";
+    warn.textContent = "Maybe skip this one: " + skip;
+    box.append(warn);
+  }
   replies.forEach((r) => {
     const card = document.createElement("div");
     card.className = "reply";
@@ -98,7 +104,7 @@ async function generate() {
       return;
     }
     setStatus("");
-    renderReplies(res.replies);
+    renderReplies(res.replies, res.skip);
     $("go").textContent = "Regenerate";
   } catch (e) {
     setStatus(e.message, true);
@@ -117,7 +123,7 @@ $("notes").addEventListener("keydown", (e) => e.key === "Enter" && generate());
     renderPost(ctx.focal);
     const { last } = await chrome.storage.session.get("last");
     if (last && last.url === ctx.url && Date.now() - last.at < 30 * 60 * 1000) {
-      renderReplies(last.replies);
+      renderReplies(last.replies, last.skip);
       $("go").textContent = "Regenerate";
     } else {
       generate();
